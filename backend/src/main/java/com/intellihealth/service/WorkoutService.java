@@ -157,23 +157,21 @@ public class WorkoutService {
     }
 
     @Transactional
-    public int autoCompleteExpiredWorkouts() {
+    @org.springframework.scheduling.annotation.Scheduled(cron = "0 0 * * * *") // Every hour at minute 0
+    public void autoCompleteExpiredWorkouts() {
         try {
-            User currentUser = userService.getCurrentUser();
             java.time.LocalDate today = java.time.LocalDate.now();
             java.time.LocalTime currentTime = java.time.LocalTime.now();
             
-            log.info("Auto-completing workouts for user {} at {} on {}", 
-                    currentUser.getEmail(), currentTime, today);
+            log.info("Auto-completing workouts at {} on {}", currentTime, today);
             
-            // Find all active workouts that have passed their end time
-            java.util.List<WorkoutPlan> expiredWorkouts = workoutPlanRepository
-                    .findByUserAndActiveStatusAndWorkoutDateLessThanEqual(currentUser, WorkoutPlan.ActiveStatus.ACTIVE, today);
+            // Find all active workouts that have passed their end time (across all users)
+            java.util.List<WorkoutPlan> allActiveWorkouts = workoutPlanRepository.findByActiveStatus(WorkoutPlan.ActiveStatus.ACTIVE);
             
-            log.info("Found {} active workouts to check for auto-completion", expiredWorkouts.size());
+            log.info("Found {} active workouts to check for auto-completion", allActiveWorkouts.size());
             
             int completedCount = 0;
-            for (WorkoutPlan workout : expiredWorkouts) {
+            for (WorkoutPlan workout : allActiveWorkouts) {
                 // Check if workout date is in the past OR (today AND end time has passed)
                 if (workout.getWorkoutDate().isBefore(today) || 
                     (workout.getWorkoutDate().equals(today) && workout.getEndTime().isBefore(currentTime))) {
@@ -187,11 +185,8 @@ public class WorkoutService {
             if (completedCount > 0) {
                 log.info("Auto-completed {} expired workout(s)", completedCount);
             }
-            
-            return completedCount;
         } catch (Exception e) {
             log.error("Error in autoCompleteExpiredWorkouts: {}", e.getMessage(), e);
-            throw e;
         }
     }
 }
