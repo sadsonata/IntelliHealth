@@ -80,10 +80,19 @@ const hasWorkoutStarted = (workout: WorkoutPlan): boolean => {
 
 export const WorkoutPlanPage: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  // Get today's date in local timezone (not UTC)
+  const getTodayLocalDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const [createWorkoutData, setCreateWorkoutData] = useState<WorkoutPlanCreateRequest>({
     exerciseType: '',
     exerciseId: 0,
-    workoutDate: new Date().toISOString().split('T')[0], // yyyy-MM-dd format for date input
+    workoutDate: getTodayLocalDate(), // yyyy-MM-dd format for date input in local timezone
     startTime: '',
     endTime: '',
     comments: '',
@@ -614,7 +623,18 @@ export const WorkoutPlanPage: React.FC = () => {
             Today's Workouts - {formatDate(new Date())}
           </h2>
           <Button
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => {
+              setCreateWorkoutData({
+                exerciseType: '',
+                exerciseId: 0,
+                workoutDate: getTodayLocalDate(),
+                startTime: '',
+                endTime: '',
+                comments: '',
+                workoutPhotoUrl: ''
+              });
+              setIsCreateModalOpen(true);
+            }}
             className="flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
