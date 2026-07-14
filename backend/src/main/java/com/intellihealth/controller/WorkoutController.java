@@ -26,9 +26,11 @@ public class WorkoutController {
 
     @PostMapping
     public ResponseEntity<?> createWorkoutPlan(@Valid @RequestBody WorkoutPlanCreateRequest request) {
-        WorkoutPlan createdPlan = workoutService.createWorkoutPlan(request);
-        // Convert to DTO to avoid lazy loading issues
-        WorkoutPlanDTO dto = WorkoutPlanDTO.builder()
+        try {
+            log.info("Creating workout plan with request: {}", request);
+            WorkoutPlan createdPlan = workoutService.createWorkoutPlan(request);
+            // Convert to DTO to avoid lazy loading issues
+            WorkoutPlanDTO dto = WorkoutPlanDTO.builder()
             .id(createdPlan.getId())
             .title(createdPlan.getTitle())
             .description(createdPlan.getDescription())
@@ -45,6 +47,10 @@ public class WorkoutController {
             .updatedAt(createdPlan.getUpdatedAt())
             .build();
         return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            log.error("Error creating workout plan: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
     }
 
     @GetMapping("/exercises/by-category")
@@ -177,9 +183,4 @@ public class WorkoutController {
         return ResponseEntity.ok(completedPlan);
     }
 
-    @PostMapping("/auto-complete")
-    public ResponseEntity<Integer> autoCompleteExpiredWorkouts() {
-        int completedCount = workoutService.autoCompleteExpiredWorkouts();
-        return ResponseEntity.ok(completedCount);
-    }
 }
