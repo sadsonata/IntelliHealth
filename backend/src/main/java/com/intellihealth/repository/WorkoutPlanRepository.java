@@ -16,6 +16,7 @@ public interface WorkoutPlanRepository extends JpaRepository<WorkoutPlan, Long> 
     List<WorkoutPlan> findByUserId(Long userId);
     List<WorkoutPlan> findByUserAndActiveStatus(User user, WorkoutPlan.ActiveStatus status);
     List<WorkoutPlan> findByUserAndWorkoutDate(User user, LocalDate workoutDate);
+    List<WorkoutPlan> findByActiveStatus(WorkoutPlan.ActiveStatus status);
     
     @Query("SELECT w FROM WorkoutPlan w WHERE w.user = :user AND w.activeStatus = :status AND w.workoutDate <= :date")
     List<WorkoutPlan> findByUserAndActiveStatusAndWorkoutDateLessThanEqual(
